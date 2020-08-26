@@ -334,7 +334,7 @@ public class Blokus : MonoBehaviour
                            (pieceForm[x, y] != 0 && BlokusMap[currentCoord.x, currentCoord.y] != GROUND_TILE)) {
                             if (displayLogs) 
                             {Debug.Log("No space available");
-                                    source.PlayOneShot(putdown,1.0f);
+                            source.PlayOneShot(putdown,1.0f);
                             }
 
                             return false;
@@ -365,8 +365,8 @@ public class Blokus : MonoBehaviour
                 }
             }
 
-            if (displayLogs && !pieceConnected) Debug.Log("Piece not connected");
-
+            if (displayLogs && !pieceConnected){ Debug.Log("Piece not connected");
+            source.PlayOneShot(putdown,1.0f);}
             return pieceConnected;
         }
 
