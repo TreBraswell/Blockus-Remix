@@ -8,14 +8,15 @@ using System.Linq;
 public class Blokus : MonoBehaviour
 {
     //sound effects
+    public GameObject explosion;
     public AudioClip pickup;
     public AudioClip putdown;
+    public AudioClip incorrect;
     private AudioSource source;
 
 
-
-
-
+    public Vector2 placingpos;
+    public ParticleSystem exp;
     private const int NB_COL = 22;
     private const int NB_ROW = 22;
     public readonly int[,] BlokusMap = new int[NB_COL, NB_ROW];
@@ -97,6 +98,7 @@ public class Blokus : MonoBehaviour
     void Start() {
         source = GetComponent<AudioSource>();
         source.Play();
+        exp = explosion.GetComponent<ParticleSystem>();
         TileBase tile;
         int actualTile;
         
@@ -183,7 +185,7 @@ public class Blokus : MonoBehaviour
         // Get coordinate on mouse click
         if (gameIsFinished == false && Input.GetMouseButtonDown(0)) {
             Vector3 pos = Camera.main.ScreenToWorldPoint(Input.mousePosition);
-
+            placingpos = pos;
             Vector2 mousePos2d = new Vector2(pos.x, pos.y);
             RaycastHit2D hit = Physics2D.Raycast(mousePos2d, Vector2.zero);
             // Get the value of the piece selected
@@ -330,7 +332,11 @@ public class Blokus : MonoBehaviour
                         // Verify the space
                         if (currentCoord.x >= NB_COL || currentCoord.y >= NB_ROW ||
                            (pieceForm[x, y] != 0 && BlokusMap[currentCoord.x, currentCoord.y] != GROUND_TILE)) {
-                            if (displayLogs) Debug.Log("No space available");
+                            if (displayLogs) 
+                            {Debug.Log("No space available");
+                                    source.PlayOneShot(putdown,1.0f);
+                            }
+
                             return false;
                         }
 
@@ -340,7 +346,10 @@ public class Blokus : MonoBehaviour
                                 BlokusMap[currentCoord.x, currentCoord.y + 1] == (int)player.Color ||
                                 BlokusMap[currentCoord.x - 1, currentCoord.y] == (int)player.Color ||
                                 BlokusMap[currentCoord.x, currentCoord.y - 1] == (int)player.Color) {
-                                if (displayLogs) Debug.Log("Can't place the piece next to another one of the same player");
+                                if (displayLogs) {
+                                    Debug.Log("Can't place the piece next to another one of the same player");
+                                 source.PlayOneShot(putdown,1.0f);
+                                }
                                 return false;
                             }
 
@@ -526,6 +535,11 @@ public class Blokus : MonoBehaviour
         if (available)
         {
             source.PlayOneShot(putdown,1.0f);
+            //exp.EmitParams.position =
+            Debug.Log("this is the variable" + placingpos);
+            explosion.transform.position =new Vector3( placingpos[0],placingpos[1],explosion.transform.position.z);
+            exp.Play();
+
             Debug.Log("placed");
         }
         SwitchPlayer();
@@ -538,21 +552,25 @@ public class Blokus : MonoBehaviour
                 if (BlokusMap[x, y] == (int)player.Color) {
                     if (x + 1 < NB_COL && y + 1 < NB_COL) {
                         if (HasSpaceForAnyPieceVariant(new Vector2Int(x + 1, y + 1), player)) {
+                            Debug.Log("can we play here1");
                             return true;
                         }
                     }
                     if (x + 1 < NB_COL && y - 1 > 0) {
                         if (HasSpaceForAnyPieceVariant(new Vector2Int(x + 1, y - 1), player)) {
+                            Debug.Log("can we play here2");
                             return true;
                         }
                     }
                     if (x - 1 > 0 && y + 1 < NB_COL) {
                         if (HasSpaceForAnyPieceVariant(new Vector2Int(x - 1, y + 1), player)) {
+                            Debug.Log("can we play here3");
                             return true;
                         }
                     }
                     if (x - 1 > 0 && y - 1 > 0) {
                         if (HasSpaceForAnyPieceVariant(new Vector2Int(x - 1, y - 1), player)) {
+                            Debug.Log("can we play here4");
                             return true;
                         }
                     }
@@ -575,6 +593,7 @@ public class Blokus : MonoBehaviour
                 spaceAvailable = VerifyPiecePlacement(pieceForm, coordinate, player);
 
                 if (spaceAvailable) {
+                    Debug.Log(coordinate);
                     return spaceAvailable;
                 } else {
                     // To verify all possible placement of the piece we have to change the coordinate according to its size
