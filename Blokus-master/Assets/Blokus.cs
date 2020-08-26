@@ -7,6 +7,15 @@ using System.Linq;
 
 public class Blokus : MonoBehaviour
 {
+    //sound effects
+    public AudioClip pickup;
+    public AudioClip putdown;
+    private AudioSource source;
+
+
+
+
+
     private const int NB_COL = 22;
     private const int NB_ROW = 22;
     public readonly int[,] BlokusMap = new int[NB_COL, NB_ROW];
@@ -86,6 +95,8 @@ public class Blokus : MonoBehaviour
 
     // Use this for initialization
     void Start() {
+        source = GetComponent<AudioSource>();
+        source.Play();
         TileBase tile;
         int actualTile;
         
@@ -178,8 +189,11 @@ public class Blokus : MonoBehaviour
             // Get the value of the piece selected
             if (hit.collider != null) {
                 currentPiece = hit.collider.gameObject.GetComponent<Piece>();
-
+                
                 if (currentPiece != null) {
+
+                    Debug.Log("test this"); 
+                    source.PlayOneShot(pickup,1.0f); 
                     selectedPieceMap = currentPiece.PieceForm;
                     // Replace the value of the selected piece with the value of current player
                     for (int x = 0; x <= selectedPieceMap.GetUpperBound(0); x++) {
@@ -215,7 +229,6 @@ public class Blokus : MonoBehaviour
             if ((coordinate.x > 0 && coordinate.x < NB_COL)
             && (coordinate.y > 0 && coordinate.y < NB_ROW)
             && (VerifyPiecePlacement(selectedPieceMap, (Vector2Int)coordinate, currentPlayer, true))) {
-
                 // Place the piece
                 int generatedScore = 0;
                 int blockPlaced = 0;
@@ -298,12 +311,13 @@ public class Blokus : MonoBehaviour
     }
 
     private bool VerifyPiecePlacement(int[,] pieceForm, Vector2Int coordinate, Player player, bool displayLogs = false) {
+        //Debug.Log("isplaced");
         int col = pieceForm.GetLength(0);
         int row = pieceForm.GetLength(1);
 
         bool isConnected() {
             bool pieceConnected = false;
-
+            //Debug.Log("ISplaced");
             // Verify the limit of the map
             if ((coordinate.x > 0 && coordinate.x < NB_COL)
             && (coordinate.y > 0 && coordinate.y < NB_ROW)
@@ -348,6 +362,7 @@ public class Blokus : MonoBehaviour
         }
 
         return isConnected();
+
     }
 
     private void VerifyGameStatus() {
@@ -493,9 +508,11 @@ public class Blokus : MonoBehaviour
     /// Verify all player if they can still play, then switch to the next player who can play
     /// </summary>
     private void CheckSpaceForAllPlayers() {
+        bool available = false;
         for (int i = playerList.Count - 1; i >= 0; i--) {
             Player p = playerList[i];
-            if (p.CanPlay() && SearchAvailableSpace(p) == false) {
+            available = SearchAvailableSpace(p);
+            if (p.CanPlay() &&  available== false) {
                 GameObject playerInfo = playerInfoList[i];
                 TextMeshProUGUI playerStatus = playerInfo.transform.Find(PLAYER_INFO_STATUS_COMPONENT_NAME).GetComponent<TextMeshProUGUI>();
                 playerStatus.text = STATUS_BLOCKED;
@@ -506,7 +523,11 @@ public class Blokus : MonoBehaviour
                 VerifyGameStatus();
             }
         }
-
+        if (available)
+        {
+            source.PlayOneShot(putdown,1.0f);
+            Debug.Log("placed");
+        }
         SwitchPlayer();
     }
 
