@@ -7,7 +7,16 @@ using System.Linq;
 
 public class Blokus : MonoBehaviour
 {
+    //screen shake
+	public float shakeDuration = .1f;
+	public Vector3 originalPos;
+	// Amplitude of the shake. A larger value shakes the camera harder.
+	public float shakeAmount = 0f;
+	public float decreaseFactor =.1f;
+    public float OGAmount = 0.1f;
+	public Transform camTransform;
     //sound effects
+    public GameObject camera; 
     public GameObject explosion;
     public AudioClip pickup;
     public AudioClip putdown;
@@ -96,6 +105,8 @@ public class Blokus : MonoBehaviour
 
     // Use this for initialization
     void Start() {
+        camTransform =camera.transform;
+        originalPos =camTransform.localPosition;
         source = GetComponent<AudioSource>();
         source.Play();
         exp = explosion.GetComponent<ParticleSystem>();
@@ -216,6 +227,18 @@ public class Blokus : MonoBehaviour
         RefreshGroundTiles();
 
         DisplayPreviewPiece();
+        if (shakeDuration > 0)
+		{
+            Debug.Log("we shaking");
+			camTransform.localPosition = originalPos + Random.insideUnitSphere * shakeAmount;
+			
+			shakeDuration -= Time.deltaTime * decreaseFactor;
+		}
+		else
+		{
+			shakeDuration = 0f;
+			camTransform.localPosition = originalPos;
+		}
     }
 
     /// <summary>
@@ -534,12 +557,31 @@ public class Blokus : MonoBehaviour
         }
         if (available)
         {
+            exp.Stop();
             source.PlayOneShot(putdown,1.0f);
             //exp.EmitParams.position =
             Debug.Log("this is the variable" + placingpos);
             explosion.transform.position =new Vector3( placingpos[0],placingpos[1],explosion.transform.position.z);
+            
+            switch (currentPlayer.Color) {
+                    case BlokusColor.BLUE:
+                        explosion.GetComponent<ParticleSystem>().startColor =Color.blue;
+                        break;
+                    case BlokusColor.GREEN:
+                        explosion.GetComponent<ParticleSystem>().startColor = Color.green;
+                        break;
+                    case BlokusColor.RED:
+                        explosion.GetComponent<ParticleSystem>().startColor = Color.red;
+                        break;
+                    case BlokusColor.YELLOW:
+                        explosion.GetComponent<ParticleSystem>().startColor = Color.yellow;
+                        break;
+                    default:
+                        break;
+                }
             exp.Play();
-
+            shakeDuration = OGAmount;
+            OGAmount = OGAmount + .004f;
             Debug.Log("placed");
         }
         SwitchPlayer();
